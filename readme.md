@@ -3,9 +3,9 @@ PWM LED Controller
 
 Some useful things to install on your RaspberryPi:
 
-sudo apt-get install i2c-tools
-sudo apt-get install python-smbus
-sudo adduser <yourusername> i2c
+sudo apt-get install i2c-tools  
+sudo apt-get install python-smbus  
+sudo adduser <yourusername> i2c  
 i2cdetect -y 0
 
 May use in future:
