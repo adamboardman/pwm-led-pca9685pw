@@ -95,5 +95,25 @@ class TestPCM(unittest.TestCase):
         pwm.reset()
         pwm.setColour(0,19,232,221)
 
+    def test_fadePurpleToCyan(self):
+        pwm = pca9685pw.Pca9685pw()
+        pwm.defaultAddress = address
+        pwm.setFrequency(frequency)
+        pwm.reset()
+        pwm.setColour(0,217,27,224)
+        pwm.fadeToColour(0,19,232,221)
+
+    def test_fadeRainbow(self):
+        pwm = pca9685pw.Pca9685pw()
+        pwm.defaultAddress = address
+        pwm.setFrequency(frequency)
+        pwm.reset()
+        pwm.setColour(0,255,0,0)
+        pwm.fadeToColour(0,255,128,0)
+        pwm.fadeToColour(0,246,255,0)
+        pwm.fadeToColour(0,0,255,0)
+        pwm.fadeToColour(0,0,0,255)
+        pwm.fadeToColour(0,140,0,255)
+
 if __name__ == '__main__':
     unittest.main()

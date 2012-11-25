@@ -25,7 +25,7 @@ class Pca9685pw:
 
         self.ledFull = 0x10 # bit4 used to set full On/Off
 
-        self.ledMaxOn = 4096-1 #0 based counter
+        self.ledMaxOn = 4096-1.0 #0 based counter
 
     def reset(self):
 	self.bus.write_byte_data(self.defaultAddress,self.pca9685Mode1, 0)
@@ -60,7 +60,7 @@ class Pca9685pw:
 	offTimeL = offTime & 0xff
 	offTimeH = offTime >> 8
 	#print ledOnL,ledOnH,ledOffL,ledOffH
-	print onTimeL,onTimeH,offTimeL,offTimeH
+	#print onTimeL,onTimeH,offTimeL,offTimeH
 	self.writeByteData(ledOnL,onTimeL)
 	self.writeByteData(ledOnH,onTimeH)
 	self.writeByteData(ledOffL,offTimeL)
@@ -102,14 +102,14 @@ class Pca9685pw:
 	self.writeByteData(ledOffH,self.ledFull)
 	
     def setPercent(self,ledNum,percentOn):
-        print 'Percent',ledNum,percentOn
+        print 'setPercent',ledNum,percentOn
 	timeOn = int((percentOn/100.0)*self.ledMaxOn)
 	if timeOn == 0:
             return self.setFullOff(ledNum)
         if timeOn == self.ledMaxOn:
             return self.setFullOn(ledNum)
 	maxLeadIn = self.ledMaxOn - timeOn
-	start = random.randint(0,maxLeadIn)
+	start = 0 #random.randint(0,maxLeadIn)
 	stop = start+timeOn
 	self.setTimes(ledNum,start,stop)
 
@@ -118,3 +118,46 @@ class Pca9685pw:
         self.setPercent(ledNum,(red/255.0*100))
         self.setPercent(ledNum+1,(green/255.0*100))
         self.setPercent(ledNum+2,(blue/255.0*100))
+
+    def getPercent(self,ledNum):
+        ledOnL = self.led0OnL + self.ledBlockSize * ledNum
+	ledOnH = self.led0OnH + self.ledBlockSize * ledNum
+	ledOffL = self.led0OffL + self.ledBlockSize * ledNum
+	ledOffH = self.led0OffH + self.ledBlockSize * ledNum
+	onTimeL = self.readByteData(ledOnL)
+	onTimeH = self.readByteData(ledOnH)
+	offTimeL = self.readByteData(ledOffL)
+	offTimeH = self.readByteData(ledOffH)
+	if (onTimeH == self.ledFull):
+            print 'getPercent',100
+            return 100
+        if (offTimeH == self.ledFull):
+            print 'getPercent',0
+            return 0
+	startOnTime = (onTimeH<<8) + onTimeL
+	startOffTime = (offTimeH<<8) + offTimeL
+	startTimeOn = startOffTime - startOnTime
+	percentOn = 100*(startTimeOn/self.ledMaxOn)
+	print 'getPercent',percentOn
+	return percentOn
+
+    def fadeToColour(self,ledNum,red,green,blue):
+        steps = 100
+        totalTime = 2.0
+        startRed = self.getPercent(ledNum)
+        startGreen = self.getPercent(ledNum+1)
+        startBlue = self.getPercent(ledNum+2)
+        endRed = (red/255.0*100)
+        endGreen = (green/255.0*100)
+        endBlue = (blue/255.0*100)
+        redDiff = endRed - startRed
+        greenDiff = endGreen - startGreen
+        blueDiff = endBlue - startBlue
+        print 'start',startRed,startGreen,startBlue
+        print 'end',endRed,endGreen,endBlue
+        for i in range(0,steps):
+            self.setPercent(ledNum,startRed+(redDiff/steps)*i)
+            self.setPercent(ledNum+1,startGreen+(greenDiff/steps)*i)
+            self.setPercent(ledNum+2,startBlue+(blueDiff/steps)*i)
+            time.sleep(totalTime/steps)
+        self.setColour(ledNum,red,green,blue)
